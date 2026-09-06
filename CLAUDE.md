@@ -169,6 +169,7 @@ What "real system" means here, concretely:
 - **Use superpowers skills whenever they apply** — invoke via `Skill` before acting; process skills before implementation skills.
 - **Don't add dependencies casually** — `makedepends`/`depends` are intentional. `font-patcher` and its FontForge path are load-bearing; don't swap them without asking.
 - **Regenerate `.SRCINFO` whenever `PKGBUILD` metadata changes** — never commit a `PKGBUILD` change without the matching `.SRCINFO`.
+- **Reuse before you write** — this recipe has a sibling (`ttf-atkinson-hyperlegible-nerd`): when the patch flags, the `pkgver()` derivation or the install layout change here, check the other and keep both in the same shape instead of growing a second style. Dependency names come from the official repos, the `font-patcher` invocation is the single place the flags live, and no value that `pkgver()`, `updpkgsums` or `makepkg --printsrcinfo` already derives gets re-typed by hand.
 - **Keep it reproducible** — don't hardcode a pkgver; the `pkgver()` function derives it from upstream git. Bump `pkgrel` when the packaging (not upstream) changes.
 - **Don't vendor built fonts or `pkg/`/`src/` into git** — these are build artifacts. Only `PKGBUILD` (and `.SRCINFO`) are tracked.
 - **UI work → N/A** — this repo has no UI/frontend surface.
