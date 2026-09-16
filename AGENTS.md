@@ -1,4 +1,4 @@
-# ttf-atkinson-hyperlegible-mono-nerd — Claude Guide
+# ttf-atkinson-hyperlegible-mono-nerd — Agent Guide
 
 A tiny Arch Linux packaging repo. A single `PKGBUILD` clones the upstream
 [Atkinson Hyperlegible Next Mono](https://github.com/googlefonts/atkinson-hyperlegible-next-mono)
@@ -13,6 +13,33 @@ The whole project is one `PKGBUILD` plus (optionally) a generated `.SRCINFO`.
 There is no application code — just read `PKGBUILD` end to end before changing
 anything. It is a `-git` VCS package: `pkgver` is derived from the upstream
 git history, so it changes on every rebuild.
+
+## Agent compatibility — Codex and Claude Code
+
+This file is `AGENTS.md`: the **one** instruction file for every coding agent in this repo. Codex
+reads it directly; Claude Code reads `CLAUDE.md`, which only imports this file (`@AGENTS.md`) and
+holds what applies to Claude alone. **Edit rules here, never in `CLAUDE.md`** — two copies of a
+rule drift apart on the first edit, and each agent then obeys a different one.
+
+| Concern | Claude Code | Codex |
+| --- | --- | --- |
+| Instruction file | `CLAUDE.md` → imports `AGENTS.md` | `AGENTS.md` (root down to the working directory) |
+| Invoke a skill | `Skill` tool, or `/<skill>` | mention it (`$<skill>`), or let it trigger from its description |
+| Skills on disk | `~/.claude/skills` (links into `~/.agents/skills`) | `.agents/skills`, then `~/.agents/skills` |
+| superpowers | `superpowers@claude-plugins-official` (`/plugin install`) | `superpowers@openai-curated` (install from `/plugins`; that id is its key in `~/.codex/config.toml`) |
+| MCP servers | `claude mcp add -s user <name> -- <cmd>` | `codex mcp add <name> -- <cmd>` (`~/.codex/config.toml`) |
+| File size | imports load whole | `project_doc_max_bytes`, **32 KiB by default** — raise it when this file is bigger, or the tail is silently dropped |
+
+- **Install shared skills once, for both agents:** `npx skills add <owner/repo> -g --skill <name>`
+  writes to `~/.agents/skills` and links it for Claude Code, so both run the same version.
+- **Names in this file are capabilities, not one agent's syntax.** "Invoke the `X` skill" means the
+  `Skill` tool in Claude Code and a skill mention in Codex. An MCP server named here is used when it
+  is registered for the agent you are running in; its absence never blocks ordinary work.
+- **Modes, model caps and Git rules bind both agents.** "lite mode", "normal mode" and "modo
+  desatendido" mean the same in Codex; a cap written as "no model above Sonnet" means "no model
+  above the mid tier" there.
+- **Claude-only commands** (`/graphify` and other slash commands that are not skills) are skipped by
+  Codex unless the same capability is installed as a skill in `~/.agents/skills`.
 
 ## ⚡ superpowers — use whenever applicable
 
@@ -282,7 +309,10 @@ measured number.
 - **Reuse before you write** — this recipe has a sibling (`ttf-atkinson-hyperlegible-nerd`): when the patch flags, the `pkgver()` derivation or the install layout change here, check the other and keep both in the same shape instead of growing a second style. Dependency names come from the official repos, the `font-patcher` invocation is the single place the flags live, and no value that `pkgver()`, `updpkgsums` or `makepkg --printsrcinfo` already derives gets re-typed by hand.
 - **Keep it reproducible** — don't hardcode a pkgver; the `pkgver()` function derives it from upstream git. Bump `pkgrel` when the packaging (not upstream) changes.
 - **Don't vendor built fonts or `pkg/`/`src/` into git** — these are build artifacts. Only `PKGBUILD` (and `.SRCINFO`) are tracked.
-- **UI work → N/A** — this repo has no UI/frontend surface.
+- **SOLID and the UI/UX workflow do not apply here** — this repo is font packaging only (a
+  `PKGBUILD` plus upstream sources run through `font-patcher`), with no application code and no
+  UI/frontend surface to design or componentize. Decided and written down; revisit only if this
+  repo ever grows executable logic or a UI beyond the package build.
 - **Instrument before you ablate, budget the lap, and dispatch review in parallel** — a pipeline that completes with non-empty output produced output; more than three reproductions means you owe a shortcut script; a review finding is not a reproduction; and the review of task N runs alongside the implementation of N+1. See **Debugging** and **Agent orchestration** above.
 
 ## Git & GitHub
